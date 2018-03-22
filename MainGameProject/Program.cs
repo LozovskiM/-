@@ -100,6 +100,4 @@ namespace GameMain
 
     }
 
-    //Тоха пидр
-
 }
