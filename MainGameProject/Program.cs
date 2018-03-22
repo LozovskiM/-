@@ -1,4 +1,4 @@
-﻿// Ролевая игра (1 курс, 2 семестр )
+﻿// Ролевая игра (1 курс, 2 семестр ) 
 using System;
 using System.Collections.Generic;
 using System.Linq;
