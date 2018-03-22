@@ -99,5 +99,9 @@ namespace GameMain
 
 
     }
+    public class Item
+    {
+
+    }
 
 }
