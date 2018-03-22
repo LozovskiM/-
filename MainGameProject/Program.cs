@@ -12,6 +12,12 @@ namespace GameMain
         static void Main(string[] args)
         {
             Player Max = new Player("Maxim", "human", "man");
+            Max.PlayerCurrentHealth = 20;
+            Max.PlayerMaxHealth = 100;
+            Max.PlayerExp = 1000;
+            Max.PlayerAge = 17;
+            Max.PlayerCondition = "Здоров";
+            Console.WriteLine(Max.ToString());
         }
     }
     public class Player : IComparable<Player>  // класс персонажа
@@ -19,13 +25,13 @@ namespace GameMain
         // Характеристики персонажа
         protected readonly Guid PlayerID;
         protected readonly string PlayerName; // Имя персонажа
-        protected string PlayerCondition; // состояние персонажа
+        public string PlayerCondition; // состояние персонажа
         protected readonly string PlayerRace; //раса персонажа
         protected readonly string PlayerSex; //пол
-        protected int PlayerAge { get; set; } // возраст
-        protected int PlayerCurrentHealth { get; set; } // текущее состояние здоровья
-        protected int PlayerMaxHealth { get; set; } // максимальное здоровье
-        protected int PlayerExp { get; set; }// кол-во набранного опыта
+        public int PlayerAge { get; set; } // возраст
+        public int PlayerCurrentHealth { get; set; } // текущее состояние здоровья
+        public int PlayerMaxHealth { get; set; } // максимальное здоровье
+        public int PlayerExp { get; set; }// кол-во набранного опыта
 
         public Player(string playerName, string playerRace, string playerSex) // конструктор для неизменяемых полей
         {
