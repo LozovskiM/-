@@ -66,7 +66,7 @@ namespace GameMain
         }
         public override string ToString()  //вывод информации о герое
         {
-            return "Hero name:" + PlayerName.ToString() + ": Race: " + PlayerRace.ToString() + ", Sex: " + PlayerSex.ToString() + ", Age: " + PlayerAge.ToString() + ", Condition: " + PlayerCondition.ToString() + ", Max Health: " + PlayerMaxHealth.ToString() + ", Current Health: " + PlayerCurrentHealth.ToString() + ", Experiance: " + PlayerExp.ToString() + ".";
+            return "Hero name:" + PlayerName.ToString() + ", Race: " + PlayerRace.ToString() + ", Sex: " + PlayerSex.ToString() + ", Age: " + PlayerAge.ToString() + ", Condition: " + PlayerCondition.ToString() + ", Max Health: " + PlayerMaxHealth.ToString() + ", Current Health: " + PlayerCurrentHealth.ToString() + ", Experiance: " + PlayerExp.ToString() + ".";
         }
 
     }
@@ -77,18 +77,13 @@ namespace GameMain
         public int PlayerCurrentMana { get; set; } // текущее состояние маны
         public int PlayerMaxMana { get; set; } // максимальное кол-во маны
 
-        public void ApplyHeal(int heal)  // пополнение здоровья
+        public void ApplyHeal(int heal,MagicPlayer person)  // пополнение здоровья
         {
-             if (PlayerCurrentMana / 2 >= heal)
-                 PlayerCurrentHealth += heal;
-             if (PlayerCurrentHealth > PlayerMaxHealth)
-             {
-                 PlayerCurrentHealth = PlayerMaxHealth;
-             }
-
+            RegenHealth Health = new RegenHealth(heal);
+            Health.UseSkill(person, heal);
 
         }
-        public void UseSkill(int UseMana)   // использование маны и проверка на ее кол-во
+        public void UseSkillMana(int UseMana)   // использование маны и проверка на ее кол-во
         {
             if (UseMana <= PlayerCurrentMana)
                 PlayerCurrentHealth -= UseMana;
@@ -119,12 +114,15 @@ namespace GameMain
 
     public class RegenHealth : Skill // Добавление здоровья
     {
+      public RegenHealth(int PlusHealthbuff) {
+            PlusHealth = PlusHealthbuff;
+        }
         public int PlusHealth { get; set; } // минимальное значение маны
         public override void UseSkill (MagicPlayer person, int heal = 0)
         {
             heal = PlusHealth;
             SkillMinMana = PlusHealth * 2;
-            person.UseSkill(SkillMinMana);
+            person.UseSkillMana(SkillMinMana);
             if (person.PlayerCurrentMana / 2 >= PlusHealth)
                 person.PlayerCurrentMana += PlusHealth;
             if (person.PlayerCurrentHealth > person.PlayerMaxHealth)
@@ -139,7 +137,7 @@ namespace GameMain
         public override void UseSkill(MagicPlayer person, int damage = 0)
         {
             SkillMinMana = 20;
-            person.UseSkill(SkillMinMana);
+            person.UseSkillMana(SkillMinMana);
             if (person.PlayerCondition == "болен")
                 person.PlayerCondition = "здоров";
         }
@@ -150,7 +148,7 @@ namespace GameMain
         public override void UseSkill(MagicPlayer person, int damage = 0)
         {
             SkillMinMana = 30;
-            person.UseSkill(SkillMinMana);
+            person.UseSkillMana(SkillMinMana);
             if (person.PlayerCondition == "отравлен")
                 person.PlayerCondition = "здоров";
         }
@@ -161,7 +159,7 @@ namespace GameMain
         public override void UseSkill(MagicPlayer person, int damage = 0)
         {
             SkillMinMana = 150;
-            person.UseSkill(SkillMinMana);
+            person.UseSkillMana(SkillMinMana);
             if (person.PlayerCondition == "мертв")
             {
                 person.PlayerCondition = "ослаблен";
@@ -175,7 +173,7 @@ namespace GameMain
         public override void UseSkill(MagicPlayer person, int time = 0)
         {
             SkillMinMana = 50 * time;
-            person.UseSkill(SkillMinMana);
+            person.UseSkillMana(SkillMinMana);
             // тут работа со временем, обработать в UNITY!!!!!
         }
     }
@@ -185,7 +183,7 @@ namespace GameMain
         public override void UseSkill(MagicPlayer person, int damage = 0)
         {
             SkillMinMana = 85;
-            person.UseSkill(SkillMinMana);
+            person.UseSkillMana(SkillMinMana);
             if (person.PlayerCondition == "парализован")
             {
                 person.PlayerCondition = "здоров";
@@ -193,6 +191,8 @@ namespace GameMain
             }
         }
     }
+
+
 
 
     public class Item
