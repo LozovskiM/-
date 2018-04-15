@@ -281,23 +281,6 @@ namespace GameMain
         }
     }
 
-    public class Fro : Artefact // бутылка с живой водой 
-    {
-        int PlusHealth { get; }
-        BottleWithHealth(int Resum, int Mana, int PlusHeath) : base(false, Mana)
-        {
-            PlusHealth = PlusHealth;
-        }
-        public override void UseSkill(MagicPlayer person = null, int damage = 0)
-        {
-            damage = PlusHealth;
-            person.UseSkillMana(ArtefactMana);
-            person.PlayerCurrentHealth += damage;
-            if (person.PlayerCurrentHealth > person.PlayerMaxHealth)
-                person.PlayerCurrentHealth = person.PlayerMaxHealth;
-        }
-    }
-
     public class Item
     {
 
