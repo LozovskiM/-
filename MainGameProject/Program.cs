@@ -92,6 +92,8 @@ namespace GameMain
         {
             if (UseMana <= PlayerCurrentMana)
                 PlayerCurrentHealth -= UseMana;
+            else
+                throw new Exception("У вас недостаточно маны!");
         }
 
 
@@ -100,7 +102,6 @@ namespace GameMain
 
 
     }
-
     public interface IMagic  // интерфейс волшебство
     {
         void UseSkill(MagicPlayer person = null , int damage = 0);     
@@ -130,8 +131,7 @@ namespace GameMain
             heal = PlusHealth;
             SkillMinMana = PlusHealth * 2;
             person.UseSkillMana(SkillMinMana);
-            if (person.PlayerCurrentMana / 2 >= PlusHealth)
-                person.PlayerCurrentMana += PlusHealth;
+            person.PlayerCurrentHealth += PlusHealth;
             if (person.PlayerCurrentHealth > person.PlayerMaxHealth)
             {
                 person.PlayerCurrentHealth = person.PlayerMaxHealth;
@@ -155,9 +155,13 @@ namespace GameMain
         public override void UseSkill(MagicPlayer person = null, int damage = 0)
         {
             SkillMinMana = 30;
-            person.UseSkillMana(SkillMinMana);
             if (person.PlayerCondition == "отравлен")
+            {
+                person.UseSkillMana(SkillMinMana);
                 person.PlayerCondition = "здоров";
+            }
+            else
+                throw new Exception("Персонаж не отравлен!");
         }
     }
 
@@ -166,11 +170,15 @@ namespace GameMain
         public override void UseSkill(MagicPlayer person = null, int damage = 0)
         {
             SkillMinMana = 150;
-            person.UseSkillMana(SkillMinMana);
             if (person.PlayerCondition == "мертв")
             {
+                person.UseSkillMana(SkillMinMana);
                 person.PlayerCondition = "ослаблен";
                 person.PlayerCurrentHealth = 1;
+            }
+            else
+            {
+                throw new Exception("Персонаж жив!");
             }
         }
     }
@@ -190,9 +198,9 @@ namespace GameMain
         public override void UseSkill(MagicPlayer person = null, int damage = 0)
         {
             SkillMinMana = 85;
-            person.UseSkillMana(SkillMinMana);
             if (person.PlayerCondition == "парализован")
             {
+                person.UseSkillMana(SkillMinMana);
                 person.PlayerCondition = "здоров";
                 person.PlayerCurrentHealth = 1;
             }
@@ -205,12 +213,12 @@ namespace GameMain
 
     public abstract class Artefact : IMagic  // абстрактный класс артефактов
     {
-        public int ArtefactPower { get;  } // сила артефакта
-        public bool ArtefactResume { get;  } // возобновляемый/не возобновляемый 
-        protected Artefact(bool Resum, int Power)
+        public int ArtefactMana { get;  } // мана артефакта
+        public bool ArtefactResume { get; protected set; } // возобновляемый/не возобновляемый 
+        protected Artefact(bool Resum, int Mana)
         {
             ArtefactResume = Resum;
-            ArtefactPower = Power;
+            ArtefactMana = Mana;
         }
         public abstract void UseSkill(MagicPlayer person, int damage = 0);
 
@@ -220,14 +228,14 @@ namespace GameMain
     public class BottleWithHealth : Artefact // бутылка с живой водой 
     {
         int PlusHealth { get; }
-        BottleWithHealth(int Resum, int Power) : base(false, Power)
+        BottleWithHealth(int Resum, int Mana,int PlusHeath) : base(false, Mana)
         {
-            PlusHealth = Power;
+            PlusHealth = PlusHealth;
         }
         public override void UseSkill(MagicPlayer person = null, int damage = 0)
         {
             damage = PlusHealth;
-            person.UseSkillMana(damage);
+            person.UseSkillMana(ArtefactMana);
             person.PlayerCurrentHealth += damage;
             if (person.PlayerCurrentHealth > person.PlayerMaxHealth)
                 person.PlayerCurrentHealth = person.PlayerMaxHealth;
@@ -237,20 +245,58 @@ namespace GameMain
     public class BottleWithDeath : Artefact // бутылка с мертвой водой водой 
     {
         int PlusMana { get; }
-        BottleWithDeath(int Resum, int Power) : base(false, Power)
+        BottleWithDeath(int Resum, int Mana, int ManaPlus) : base(false, Mana)
         {
-            PlusMana = Power;
+            PlusMana = ManaPlus;
         }
+
         public override void UseSkill(MagicPlayer person = null, int damage = 0)
         {
             damage = PlusMana;
-            person.UseSkillMana(damage);
             person.PlayerCurrentMana += damage;
             if (person.PlayerCurrentMana > person.PlayerMaxMana)
                 person.PlayerCurrentMana = person.PlayerMaxMana;
         }
     }
 
+    public class lightningStuff : Artefact // посох "Молний"
+    {
+        public int Damage { get; private set; }
+        lightningStuff(int Resum, int Mana, int damage) : base(true, Mana)
+        {
+            Damage = damage;
+        }
+
+        public override void UseSkill(MagicPlayer person, int damage)
+        {
+            if (Damage != 0)
+            {
+                person.UseSkillMana(ArtefactMana);
+                if (person.PlayerCurrentMana > person.PlayerMaxMana)
+                    person.PlayerCurrentMana = person.PlayerMaxMana;
+                Damage -= damage;
+            }
+            else
+                ArtefactResume = false;
+        }
+    }
+
+    public class Fro : Artefact // бутылка с живой водой 
+    {
+        int PlusHealth { get; }
+        BottleWithHealth(int Resum, int Mana, int PlusHeath) : base(false, Mana)
+        {
+            PlusHealth = PlusHealth;
+        }
+        public override void UseSkill(MagicPlayer person = null, int damage = 0)
+        {
+            damage = PlusHealth;
+            person.UseSkillMana(ArtefactMana);
+            person.PlayerCurrentHealth += damage;
+            if (person.PlayerCurrentHealth > person.PlayerMaxHealth)
+                person.PlayerCurrentHealth = person.PlayerMaxHealth;
+        }
+    }
 
     public class Item
     {
