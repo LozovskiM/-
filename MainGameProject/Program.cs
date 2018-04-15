@@ -259,10 +259,10 @@ namespace GameMain
         }
     }
 
-    public class lightningStuff : Artefact // посох "Молний"
+    public class LightningStuff : Artefact // посох "Молний"
     {
         public int Damage { get; private set; }
-        lightningStuff(int Resum, int Mana, int damage) : base(true, Mana)
+        LightningStuff(int Resum, int Mana, int damage) : base(true, Mana)
         {
             Damage = damage;
         }
@@ -280,6 +280,23 @@ namespace GameMain
                 ArtefactResume = false;
         }
     }
+
+    public class FrogLegs : Artefact // лягушачьи лапки
+    {
+        FrogLegs(int Resum, int Mana) : base(false, Mana) { }
+        public override void UseSkill(MagicPlayer person, int damage = 0)
+        {
+
+            person.UseSkillMana(ArtefactMana);
+            if (person.PlayerCondition == "отравлен")
+            {
+                person.PlayerCondition = "здоров";
+            }
+
+        }
+
+    }
+
 
     public class Item
     {
