@@ -286,16 +286,59 @@ namespace GameMain
         FrogLegs(int Resum, int Mana) : base(false, Mana) { }
         public override void UseSkill(MagicPlayer person, int damage = 0)
         {
-
-            person.UseSkillMana(ArtefactMana);
             if (person.PlayerCondition == "отравлен")
             {
+                person.UseSkillMana(ArtefactMana);
                 person.PlayerCondition = "здоров";
             }
 
         }
 
     }
+
+    public class PoisonTouch : Artefact // ядовитая слюна
+    {
+        public int Damage { get; private set; }
+        PoisonTouch (int Resum, int Mana, int damage) : base (true, Mana)
+        {
+            Damage = damage;
+        }
+        public override void UseSkill(MagicPlayer person, int damage = 0)
+        {
+            if (person.PlayerCondition == "здоров" || person.PlayerCondition == "ослаблен")
+            {
+                person.UseSkillMana(ArtefactMana);
+                if (person.PlayerCurrentHealth - Damage <= 0)
+                {
+                    person.PlayerCurrentHealth = 0;
+                    person.PlayerCondition = "мертв";
+                }
+                else
+                {
+                    person.PlayerCondition = "отравлен";
+                    person.PlayerCurrentHealth -= Damage;
+                }
+
+            }
+
+        }
+    }
+
+    public class BasiliskEye : Artefact // глаз Василиска
+    {
+        BasiliskEye(int Resum, int Mana) : base(false, Mana) { }
+        public override void UseSkill(MagicPlayer person, int damage = 0)
+        {
+            if (person.PlayerCondition != "мертв")
+            {
+                person.UseSkillMana(ArtefactMana);
+                person.PlayerCondition = "парализован";
+            }
+
+        }
+
+    }
+
 
 
     public class Item
