@@ -11,12 +11,12 @@ namespace GameMain
     {
         static void Main(string[] args)
         {
-            Player Max = new Player("Maxim", "human", "man");
+            Player Max = new Player("Maxim", Player.PlayerRace.Человек, Player.PlayerSex.Мужчина);
             Max.PlayerCurrentHealth = 20;
             Max.PlayerMaxHealth = 100;
             Max.PlayerExp = 1000;
             Max.PlayerAge = 17;
-            Max.PlayerCondition = "Здоров";
+            Max.Condition = Player.PlayerCondition.Здоров;
             Console.WriteLine(Max.ToString());
         }
     }
@@ -28,20 +28,30 @@ namespace GameMain
         // Характеристики персонажа
         protected readonly Guid PlayerID; // ID персонажа
         protected readonly string PlayerName; // Имя персонажа
-        public string PlayerCondition; // состояние персонажа
-        protected readonly string PlayerRace; //раса персонажа
-        protected readonly string PlayerSex; //пол
+        public PlayerCondition Condition; // состояние персонажа
+        protected readonly  PlayerRace Race; //раса персонажа
+        protected readonly  PlayerSex Sex; //пол
         public int PlayerAge { get; set; } // возраст
         public int PlayerCurrentHealth { get; set; } // текущее состояние здоровья
         public int PlayerMaxHealth { get; set; } // максимальное здоровье
         public int PlayerExp { get; set; }// кол-во набранного опыта
 
-        public Player(string playerName, string playerRace, string playerSex) // конструктор для неизменяемых полей
+        public enum PlayerCondition { Здоров, Мертв, Парализован, Отравлен, Ослаблен,Болен};
+        public enum PlayerRace { Человек, Эльф, Орк, Нежить, Гном };
+        public enum PlayerSex { Мужчина, Женщина };
+
+
+        // инвентарь
+        public Dictionary<Artefact, int> Backpack;
+        public int BackpackSize = 6;
+
+        public Player(string playerName, PlayerRace playerRace, PlayerSex playerSex) // конструктор для неизменяемых полей
         {
             PlayerID = Guid.NewGuid();
             PlayerName = playerName;
-            PlayerRace = playerRace;
-            PlayerSex = playerSex;
+            Race = playerRace;
+            Sex = playerSex;
+            Backpack = new Dictionary<Artefact, int>();
         }
 
         public int CompareTo(Player obj) // сравнение персонажей по опыту
@@ -59,17 +69,69 @@ namespace GameMain
             if (PlayerCurrentHealth < 0)
                 PlayerCurrentHealth = 0;
             if (PlayerCurrentHealth == 0)
-                PlayerCondition = "Мертв";
+                Condition = PlayerCondition.Мертв;
             if (PlayerCurrentHealth < 10 && PlayerCurrentHealth > 0)
-                PlayerCondition = "Ослаблен";
+                Condition = PlayerCondition.Ослаблен;
             if (PlayerCurrentHealth >= 10)
-                PlayerCondition = "Здоров";
+                Condition = PlayerCondition.Здоров;
             if (PlayerCurrentHealth > PlayerMaxHealth)
                 PlayerCurrentHealth = PlayerMaxHealth;
         }
         public override string ToString()  //вывод информации о герое
         {
-            return "Hero name:" + PlayerName.ToString() + ", Race: " + PlayerRace.ToString() + ", Sex: " + PlayerSex.ToString() + ", Age: " + PlayerAge.ToString() + ", Condition: " + PlayerCondition.ToString() + ", Max Health: " + PlayerMaxHealth.ToString() + ", Current Health: " + PlayerCurrentHealth.ToString() + ", Experiance: " + PlayerExp.ToString() + ".";
+            return "Hero name:" + PlayerName.ToString() + ", Race: " + Race.ToString() + ", Sex: " + Sex.ToString() + ", Age: " + PlayerAge.ToString() + ", Condition: " + Condition.ToString() + ", Max Health: " + PlayerMaxHealth.ToString() + ", Current Health: " + PlayerCurrentHealth.ToString() + ", Experiance: " + PlayerExp.ToString() + ".";
+        }
+
+
+        public bool AddToBackpack (Artefact icon, int count) // добавить артефакт в инвентарь
+        {
+            if (Backpack.ContainsKey(icon))
+            {
+                Backpack[icon] += count;
+                return true;
+            }
+            else
+            {
+                if (Backpack.Count >= BackpackSize)
+                    return false;
+
+                Backpack.Add(icon, count);
+                return true;
+            }
+
+        }
+
+        public bool DeleteFromBackpakc(Artefact icon, int count)  // выбросить артефакт
+        {
+            if (!Backpack.ContainsKey(icon))
+                return false;
+
+            if (Backpack[icon] == 1)
+                Backpack.Remove(icon);
+            else
+                Backpack[icon] -= count;
+            return true;
+        }
+
+
+
+        public bool UseArtefact (Artefact icon, int power = 0, MagicPlayer person = null) // Использовать артефакт из инвенторя
+        {
+            if (!this.Backpack.ContainsKey(icon))
+                return false;
+            icon.UseSkill(person,power);
+            return true;   
+        }
+
+        public bool GiveArtefact(Artefact icon, MagicPlayer person, int count = 1)  // отдать артефакт другому персонажу
+        {
+            if (!this.Backpack.ContainsKey(icon) || person.Backpack.Count() == person.BackpackSize)
+                return false;
+
+            this.DeleteFromBackpakc(icon, count);
+            person.AddToBackpack(icon, count);
+
+            return true;
         }
 
     }
@@ -81,6 +143,7 @@ namespace GameMain
 
         public int PlayerCurrentMana { get; set; } // текущее состояние маны
         public int PlayerMaxMana { get; set; } // максимальное кол-во маны
+        public List<Skill> Skills; // Список скиллов
 
         public void ApplyHeal(int heal,MagicPlayer person)  // пополнение здоровья
         {
@@ -97,14 +160,31 @@ namespace GameMain
         }
 
 
-        public MagicPlayer(string playerName, string playerRace, string playerSex) : base(playerName, playerRace, playerSex)// конструктор для неизменяемых полей, взятый из класса предка
-        { }
+        public MagicPlayer(string playerName, PlayerRace playerRace, PlayerSex playerSex) : base(playerName, playerRace, playerSex)// конструктор для неизменяемых полей, взятый из класса предка
+        {
+            Skills = new List<Skill>();
+        }
+
+        public void LearnSkill(Skill skill)  // выучить скилл
+        {
+            Skills.Add(skill);
+        }
+
+        public void ForgetSkill(Skill skill)
+        {
+            Skills.Remove(skill);
+        }
+
+        public override string ToString()
+        {
+            return base.ToString() + ", Mana points: " + PlayerCurrentMana + ", Max mana: " + PlayerMaxMana;
+        }
 
 
     }
     public interface IMagic  // интерфейс волшебство
     {
-        void UseSkill(MagicPlayer person = null , int damage = 0);     
+        void UseSkill(MagicPlayer person = null , int damage = 0, Player enemy = null);     
     }
 
     //МАГИЧЕСКИЕ ЗАКЛИНАНИЯ
@@ -115,7 +195,7 @@ namespace GameMain
         public int SkillCast { get; set; } // вербальное использование скилла
         public int SkillAction { get; set; } // движение при использовании скилла 
 
-        public abstract void UseSkill(MagicPlayer person = null, int damage = 0);
+        public abstract void UseSkill(MagicPlayer person = null, int damage = 0, Player enemy = null);
     }
 
     // классы заклинаний :
@@ -126,7 +206,7 @@ namespace GameMain
             PlusHealth = PlusHealthbuff;
         }
         public int PlusHealth { get; set; } // минимальное значение маны
-        public override void UseSkill (MagicPlayer person = null, int heal = 0)
+        public override void UseSkill (MagicPlayer person , int heal = 0, Player enemy = null)
         {
             heal = PlusHealth;
             SkillMinMana = PlusHealth * 2;
@@ -141,24 +221,24 @@ namespace GameMain
 
     public class Heal : Skill // Вылечить
     {
-        public override void UseSkill(MagicPlayer person = null, int damage = 0)
+        public override void UseSkill(MagicPlayer person , int damage = 0, Player enemy = null)
         {
             SkillMinMana = 20;
             person.UseSkillMana(SkillMinMana);
-            if (person.PlayerCondition == "болен")
-                person.PlayerCondition = "здоров";
+            if (person.Condition == Player.PlayerCondition.Болен)
+                person.Condition = Player.PlayerCondition.Здоров;
         }
     }
 
     public class Antidote : Skill // противоядие
     {
-        public override void UseSkill(MagicPlayer person = null, int damage = 0)
+        public override void UseSkill(MagicPlayer person, int damage = 0, Player enemy = null)
         {
             SkillMinMana = 30;
-            if (person.PlayerCondition == "отравлен")
+            if (person.Condition == Player.PlayerCondition.Отравлен)
             {
                 person.UseSkillMana(SkillMinMana);
-                person.PlayerCondition = "здоров";
+                person.Condition = Player.PlayerCondition.Здоров;
             }
             else
                 throw new Exception("Персонаж не отравлен!");
@@ -167,13 +247,13 @@ namespace GameMain
 
     public class Reincarnation : Skill // возродить/оживить
     {
-        public override void UseSkill(MagicPlayer person = null, int damage = 0)
+        public override void UseSkill(MagicPlayer person, int damage = 0, Player enemy = null)
         {
             SkillMinMana = 150;
-            if (person.PlayerCondition == "мертв")
+            if (person.Condition == Player.PlayerCondition.Мертв)
             {
                 person.UseSkillMana(SkillMinMana);
-                person.PlayerCondition = "ослаблен";
+                person.Condition = Player.PlayerCondition.Ослаблен;
                 person.PlayerCurrentHealth = 1;
             }
             else
@@ -185,7 +265,7 @@ namespace GameMain
 
     public class Armor : Skill // броня ( сделать неуязвимым )
     {
-        public override void UseSkill(MagicPlayer person = null, int time = 0)
+        public override void UseSkill(MagicPlayer person, int time = 0, Player enemy = null)
         {
             SkillMinMana = 50 * time;
             person.UseSkillMana(SkillMinMana);
@@ -195,13 +275,13 @@ namespace GameMain
 
     public class Paralyzed : Skill // отомри
     {
-        public override void UseSkill(MagicPlayer person = null, int damage = 0)
+        public override void UseSkill(MagicPlayer person, int damage = 0, Player enemy = null)
         {
             SkillMinMana = 85;
-            if (person.PlayerCondition == "парализован")
+            if (person.Condition == Player.PlayerCondition.Парализован)
             {
                 person.UseSkillMana(SkillMinMana);
-                person.PlayerCondition = "здоров";
+                person.Condition = Player.PlayerCondition.Здоров;
                 person.PlayerCurrentHealth = 1;
             }
         }
@@ -220,7 +300,7 @@ namespace GameMain
             ArtefactResume = Resum;
             ArtefactMana = Mana;
         }
-        public abstract void UseSkill(MagicPlayer person, int damage = 0);
+        public abstract void UseSkill(MagicPlayer person, int damage = 0, Player enemy = null);
 
     }
 
@@ -232,7 +312,7 @@ namespace GameMain
         {
             PlusHealth = PlusHealth;
         }
-        public override void UseSkill(MagicPlayer person = null, int damage = 0)
+        public override void UseSkill(MagicPlayer person, int damage = 0, Player enemy = null)
         {
             damage = PlusHealth;
             person.UseSkillMana(ArtefactMana);
@@ -250,7 +330,7 @@ namespace GameMain
             PlusMana = ManaPlus;
         }
 
-        public override void UseSkill(MagicPlayer person = null, int damage = 0)
+        public override void UseSkill(MagicPlayer person, int damage = 0, Player enemy = null)
         {
             damage = PlusMana;
             person.PlayerCurrentMana += damage;
@@ -267,13 +347,12 @@ namespace GameMain
             Damage = damage;
         }
 
-        public override void UseSkill(MagicPlayer person, int damage)
+        public override void UseSkill(MagicPlayer person, int damage , Player enemy)
         {
             if (Damage != 0)
             {
                 person.UseSkillMana(ArtefactMana);
-                if (person.PlayerCurrentMana > person.PlayerMaxMana)
-                    person.PlayerCurrentMana = person.PlayerMaxMana;
+                enemy.ApplyDamage(damage);
                 Damage -= damage;
             }
             else
@@ -284,12 +363,12 @@ namespace GameMain
     public class FrogLegs : Artefact // лягушачьи лапки
     {
         FrogLegs(int Resum, int Mana) : base(false, Mana) { }
-        public override void UseSkill(MagicPlayer person, int damage = 0)
+        public override void UseSkill(MagicPlayer person, int damage = 0, Player enemy = null)
         {
-            if (person.PlayerCondition == "отравлен")
+            if (person.Condition == Player.PlayerCondition.Отравлен)
             {
                 person.UseSkillMana(ArtefactMana);
-                person.PlayerCondition = "здоров";
+                person.Condition = Player.PlayerCondition.Здоров;
             }
 
         }
@@ -303,21 +382,14 @@ namespace GameMain
         {
             Damage = damage;
         }
-        public override void UseSkill(MagicPlayer person, int damage = 0)
+        public override void UseSkill(MagicPlayer person, int damage , Player enemy )
         {
-            if (person.PlayerCondition == "здоров" || person.PlayerCondition == "ослаблен")
+            if (person.Condition == Player.PlayerCondition.Здоров || person.Condition == Player.PlayerCondition.Ослаблен)
             {
                 person.UseSkillMana(ArtefactMana);
-                if (person.PlayerCurrentHealth - Damage <= 0)
-                {
-                    person.PlayerCurrentHealth = 0;
-                    person.PlayerCondition = "мертв";
-                }
-                else
-                {
-                    person.PlayerCondition = "отравлен";
-                    person.PlayerCurrentHealth -= Damage;
-                }
+                enemy.ApplyDamage(Damage);
+                if (enemy.Condition != Player.PlayerCondition.Мертв)
+                    enemy.Condition = Player.PlayerCondition.Отравлен;
 
             }
 
@@ -327,23 +399,17 @@ namespace GameMain
     public class BasiliskEye : Artefact // глаз Василиска
     {
         BasiliskEye(int Resum, int Mana) : base(false, Mana) { }
-        public override void UseSkill(MagicPlayer person, int damage = 0)
+        public override void UseSkill(MagicPlayer person, int damage, Player enemy)
         {
-            if (person.PlayerCondition != "мертв")
+            if (enemy.Condition != Player.PlayerCondition.Мертв)
             {
                 person.UseSkillMana(ArtefactMana);
-                person.PlayerCondition = "парализован";
+                enemy.Condition = Player.PlayerCondition.Парализован;
             }
 
         }
 
     }
 
-
-
-    public class Item
-    {
-
-    }
 
 }
