@@ -11,14 +11,30 @@ namespace GameMain
     {
         static void Main(string[] args)
         {
-            Player Max = new Player("Maxim", Player.PlayerRace.Человек, Player.PlayerSex.Мужчина);
-            Max.PlayerCurrentHealth = 20;
+            MagicPlayer Max = new MagicPlayer("Maxim", Player.PlayerRace.Человек, Player.PlayerSex.Мужчина);
+            Max.PlayerCurrentHealth = 100;
+            Max.PlayerCurrentMana = 300;
+            Max.PlayerMaxMana = 300;
             Max.PlayerMaxHealth = 100;
             Max.PlayerExp = 1000;
-            Max.PlayerAge = 17;
-            Max.Condition = Player.PlayerCondition.Здоров;
+            Max.PlayerAge = 18;
+            Max.Condition = Player.PlayerCondition.Отравлен;
+            Paralyzed paralyzed = new Paralyzed();
+            FrogLegs legs = new FrogLegs();
+            Max.LearnSkill(paralyzed);
+            Max.AddToBackpack(legs,1);
+            try
+            {
+                paralyzed.UseSkill(Max);
+                Max.UseArtefact(legs, Max);
+            }
+            catch (InvalidCastException e)
+            {
+                Console.WriteLine(e);
+            }
+
             Console.WriteLine(Max.ToString());
-        }
+            }
     }
 
     // класс "ПЕРСОНАЖ"
@@ -79,7 +95,7 @@ namespace GameMain
         }
         public override string ToString()  //вывод информации о герое
         {
-            return "Hero name:" + PlayerName.ToString() + ", Race: " + Race.ToString() + ", Sex: " + Sex.ToString() + ", Age: " + PlayerAge.ToString() + ", Condition: " + Condition.ToString() + ", Max Health: " + PlayerMaxHealth.ToString() + ", Current Health: " + PlayerCurrentHealth.ToString() + ", Experiance: " + PlayerExp.ToString() + ".";
+            return "Hero name:" + PlayerName.ToString() + ", Race: " + Race.ToString() + ", Sex: " + Sex.ToString() + ", Age: " + PlayerAge.ToString() + ", Condition: " + Condition.ToString() + ", Max Health: " + PlayerMaxHealth.ToString() + ", Current Health: " + PlayerCurrentHealth.ToString() + ", Experiance: " + PlayerExp.ToString();
         }
 
 
@@ -115,11 +131,11 @@ namespace GameMain
 
 
 
-        public bool UseArtefact (Artefact icon, int power = 0, MagicPlayer person = null) // Использовать артефакт из инвенторя
+        public bool UseArtefact (Artefact icon, MagicPlayer person = null, Player enemy = null, int power = 0) // Использовать артефакт из инвенторя
         {
             if (!this.Backpack.ContainsKey(icon))
                 return false;
-            icon.UseSkill(person,power);
+            icon.UseSkill(person,power = 0,enemy = null);
             return true;   
         }
 
@@ -154,9 +170,9 @@ namespace GameMain
         public void UseSkillMana(int UseMana)   // использование маны и проверка на ее кол-во
         {
             if (UseMana <= PlayerCurrentMana)
-                PlayerCurrentHealth -= UseMana;
+                PlayerCurrentMana -= UseMana;
             else
-                throw new Exception("У вас недостаточно маны!");
+                throw new InvalidCastException("У вас недостаточно маны!");
         }
 
 
@@ -308,7 +324,7 @@ namespace GameMain
     public class BottleWithHealth : Artefact // бутылка с живой водой 
     {
         int PlusHealth { get; }
-        BottleWithHealth(int Resum, int Mana,int PlusHeath) : base(false, Mana)
+        public BottleWithHealth(int PlusHeath) : base(false, 50)
         {
             PlusHealth = PlusHealth;
         }
@@ -325,7 +341,7 @@ namespace GameMain
     public class BottleWithDeath : Artefact // бутылка с мертвой водой водой 
     {
         int PlusMana { get; }
-        BottleWithDeath(int Resum, int Mana, int ManaPlus) : base(false, Mana)
+        public BottleWithDeath( int ManaPlus) : base(false, 0)
         {
             PlusMana = ManaPlus;
         }
@@ -342,12 +358,12 @@ namespace GameMain
     public class LightningStuff : Artefact // посох "Молний"
     {
         public int Damage { get; private set; }
-        LightningStuff(int Resum, int Mana, int damage) : base(true, Mana)
+        public LightningStuff( int damage) : base(true, 50)
         {
             Damage = damage;
         }
 
-        public override void UseSkill(MagicPlayer person, int damage , Player enemy)
+        public override void UseSkill(MagicPlayer person, int damage = 0, Player enemy = null)
         {
             if (Damage != 0)
             {
@@ -362,7 +378,7 @@ namespace GameMain
 
     public class FrogLegs : Artefact // лягушачьи лапки
     {
-        FrogLegs(int Resum, int Mana) : base(false, Mana) { }
+        public FrogLegs() : base(false, 50) { }
         public override void UseSkill(MagicPlayer person, int damage = 0, Player enemy = null)
         {
             if (person.Condition == Player.PlayerCondition.Отравлен)
@@ -378,7 +394,7 @@ namespace GameMain
     public class PoisonTouch : Artefact // ядовитая слюна
     {
         public int Damage { get; private set; }
-        PoisonTouch (int Resum, int Mana, int damage) : base (true, Mana)
+        public PoisonTouch (int damage) : base (true, 50)
         {
             Damage = damage;
         }
@@ -398,7 +414,7 @@ namespace GameMain
 
     public class BasiliskEye : Artefact // глаз Василиска
     {
-        BasiliskEye(int Resum, int Mana) : base(false, Mana) { }
+        BasiliskEye() : base(false, 50) { }
         public override void UseSkill(MagicPlayer person, int damage, Player enemy)
         {
             if (enemy.Condition != Player.PlayerCondition.Мертв)
