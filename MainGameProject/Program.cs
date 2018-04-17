@@ -311,10 +311,12 @@ namespace GameMain
     {
         public int ArtefactMana { get;  } // мана артефакта
         public bool ArtefactResume { get; protected set; } // возобновляемый/не возобновляемый 
-        protected Artefact(bool Resum, int Mana)
+        string ArtefactName { get; } //название предмета
+        protected Artefact(bool Resum, int Mana,string name)
         {
             ArtefactResume = Resum;
             ArtefactMana = Mana;
+            ArtefactName = name;
         }
         public abstract void UseSkill(MagicPlayer person, int damage = 0, Player enemy = null);
 
@@ -324,7 +326,7 @@ namespace GameMain
     public class BottleWithHealth : Artefact // бутылка с живой водой 
     {
         int PlusHealth { get; }
-        public BottleWithHealth(int PlusHeath) : base(false, 50)
+        public BottleWithHealth(int PlusHeath) : base(false, 50," бутылка с живой водой")
         {
             PlusHealth = PlusHealth;
         }
@@ -341,7 +343,7 @@ namespace GameMain
     public class BottleWithDeath : Artefact // бутылка с мертвой водой водой 
     {
         int PlusMana { get; }
-        public BottleWithDeath( int ManaPlus) : base(false, 0)
+        public BottleWithDeath( int ManaPlus) : base(false, 0, "бутылка с мертвой водой водой")
         {
             PlusMana = ManaPlus;
         }
@@ -358,7 +360,7 @@ namespace GameMain
     public class LightningStuff : Artefact // посох "Молний"
     {
         public int Damage { get; private set; }
-        public LightningStuff( int damage) : base(true, 50)
+        public LightningStuff( int damage) : base(true, 50, "посох Молний")
         {
             Damage = damage;
         }
@@ -378,7 +380,7 @@ namespace GameMain
 
     public class FrogLegs : Artefact // лягушачьи лапки
     {
-        public FrogLegs() : base(false, 50) { }
+        public FrogLegs() : base(false, 50, "лягушачьи лапки") { }
         public override void UseSkill(MagicPlayer person, int damage = 0, Player enemy = null)
         {
             if (person.Condition == Player.PlayerCondition.Отравлен)
@@ -394,7 +396,7 @@ namespace GameMain
     public class PoisonTouch : Artefact // ядовитая слюна
     {
         public int Damage { get; private set; }
-        public PoisonTouch (int damage) : base (true, 50)
+        public PoisonTouch (int damage) : base (true, 50,"ядовитая слюна")
         {
             Damage = damage;
         }
@@ -414,7 +416,7 @@ namespace GameMain
 
     public class BasiliskEye : Artefact // глаз Василиска
     {
-        BasiliskEye() : base(false, 50) { }
+        BasiliskEye() : base(false, 50, "глаз Василиска") { }
         public override void UseSkill(MagicPlayer person, int damage, Player enemy)
         {
             if (enemy.Condition != Player.PlayerCondition.Мертв)
